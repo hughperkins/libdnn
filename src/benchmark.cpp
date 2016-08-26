@@ -11,12 +11,6 @@ Timer::Timer(device* dev_ptr)
     , has_run_at_least_once_(false) { Init(); }
 
 Timer::~Timer() {
-#ifdef USE_CUDA
-    if (dev_ptr_->backend() == BACKEND_CUDA) {
-        (cudaEventDestroy(start_gpu_cuda_));
-        (cudaEventDestroy(stop_gpu_cuda_));
-    }
-#endif  // USE_CUDA
 #ifdef USE_OPENCL
     if (dev_ptr_->backend() == BACKEND_OpenCL) {
         clWaitForEvents(1, &start_gpu_cl_);
@@ -29,11 +23,6 @@ Timer::~Timer() {
 
 void Timer::Start() {
   if (!running()) {
-#ifdef USE_CUDA
-      if (dev_ptr_->backend() == BACKEND_CUDA) {
-        (cudaEventRecord(start_gpu_cuda_, 0));
-      }
-#endif  // USE_CUDA
 #ifdef USE_OPENCL
       if (dev_ptr_->backend() == BACKEND_OpenCL) {
         clWaitForEvents(1, &start_gpu_cl_);
@@ -57,12 +46,6 @@ void Timer::Start() {
 
 void Timer::Stop() {
   if (running()) {
-#ifdef USE_CUDA
-      if (dev_ptr_->backend() == BACKEND_CUDA) {
-        (cudaEventRecord(stop_gpu_cuda_, 0));
-        (cudaEventSynchronize(stop_gpu_cuda_));
-      }
-#endif  // USE_CUDA
 #ifdef USE_OPENCL
       if (dev_ptr_->backend() == BACKEND_OpenCL) {
         clWaitForEvents(1, &stop_gpu_cl_);
@@ -87,14 +70,6 @@ float Timer::MicroSeconds() {
     if (running()) {
         Stop();
     }
-#ifdef USE_CUDA
-    if (dev_ptr_->backend() == BACKEND_CUDA) {
-      (cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_cuda_,
-              stop_gpu_cuda_));
-      // Cuda only measure milliseconds
-      elapsed_microseconds_ = elapsed_milliseconds_ * 1000;
-    }
-#endif  // USE_CUDA
 #ifdef USE_OPENCL
     if (dev_ptr_->backend() == BACKEND_OpenCL) {
       cl_ulong startTime, stopTime;
@@ -117,12 +92,6 @@ float Timer::MilliSeconds() {
   if (running()) {
     Stop();
   }
-#ifdef USE_CUDA
-    if (dev_ptr_->backend() == BACKEND_CUDA) {
-      (cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_cuda_,
-              stop_gpu_cuda_));
-    }
-#endif  // USE_CUDA
 #ifdef USE_OPENCL
     if (dev_ptr_->backend() == BACKEND_OpenCL) {
       cl_ulong startTime = 0, stopTime = 0;
@@ -143,12 +112,6 @@ float Timer::Seconds() {
 
 void Timer::Init() {
   if (!initted()) {
-#ifdef USE_CUDA
-      if (dev_ptr_->backend() == BACKEND_CUDA) {
-        (cudaEventCreate(&start_gpu_cuda_));
-        (cudaEventCreate(&stop_gpu_cuda_));
-      }
-#endif  // USE_CUDA
 #ifdef USE_OPENCL
       if (dev_ptr_->backend() == BACKEND_OpenCL) {
         start_gpu_cl_ = 0;
